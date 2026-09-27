@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cascade - Mechanical Marble Board Game</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Outfit:wght@600;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .font-outfit {
+            font-family: 'Outfit', sans-serif;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #020617;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .player-card-active {
+            border-color: #38bdf8 !important;
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.35), inset 0 0 10px rgba(56, 189, 248, 0.15);
+            transform: translateY(-2px);
+        }
+        .drop-btn {
+            transition: all 0.15s ease-in-out;
+        }
+        .drop-btn:hover:not(:disabled) {
+            background: rgba(56, 189, 248, 0.25);
+            border-color: #38bdf8;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+        }
+        .drop-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.3;
+        }
+        .mini-red-marble {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #f87171, #dc2626 50%, #7f1d1d);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.6), inset -1px -1px 2px rgba(0,0,0,0.6);
+            display: inline-block;
+        }
+    </style>
+</head>
+<body class="min-h-full flex flex-col justify-between items-center p-2 sm:p-4 bg-slate-950">
+
+    <header class="w-full max-w-5xl flex flex-wrap justify-between items-center gap-3 mb-2 glass-panel p-3 sm:p-4 rounded-2xl shadow-2xl">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-red-600 via-red-500 to-amber-400 flex items-center justify-center shadow-lg shadow-red-500/30">
+                <div class="w-4 h-4 rounded-full bg-white/90 blur-[0.5px]"></div>
+            </div>
+            <div>
+                <h1 class="font-outfit text-2xl sm:text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-sky-400 via-indigo-300 to-red-400">CASCADE</h1>
+                <p class="text-[11px] text-slate-400 font-medium">Flip-Flop Mechanical Marble Game</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+            <button id="btnFullscreen" class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-semibold transition border border-slate-700 flex items-center gap-1.5 shadow-md">
+                <span id="fullscreenIcon">⛶</span> Fullscreen
+            </button>
+            <button id="btnNewGame" class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-semibold transition border border-slate-700 flex items-center gap-1.5 shadow-md">
+                <span>⚙️</span> Match Setup
+            </button>
+            <button id="btnRandomize" class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-semibold transition border border-slate-700 flex items-center gap-1.5 shadow-md">
+                <span>🔀</span> Reset Gates
+            </button>
+            <button id="btnHowToPlay" class="px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-semibold transition border border-slate-700 flex items-center gap-1.5 shadow-md">
+                <span>📖</span> Rules
+            </button>
+            <button id="btnMute" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold transition border border-slate-700 shadow-md">
+                <span id="muteIcon">🔊</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="w-full max-w-5xl flex flex-col items-center gap-3">
+        
+        <!-- Player Scorecards / Visual Hand Inventories -->
+        <div id="scoreboard" class="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+            <!-- Dynamic Player Cards inserted by JS -->
+        </div>
+
+        <!-- Board Viewport Container -->
+        <div class="relative w-full max-w-[650px] flex flex-col items-center">
+            
+            <!-- Column Drop Buttons (1 to 10) -->
+            <div id="dropZoneContainer" class="w-full grid grid-cols-10 gap-1 mb-2 px-1">
+                <!-- Drop buttons 1..10 inserted by JS -->
+            </div>
+
+            <!-- HTML5 Canvas Viewport -->
+            <div class="relative w-full bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl">
+                <canvas id="gameCanvas" width="650" height="1020" class="w-full h-auto block bg-slate-950 cursor-pointer"></canvas>
+                
+                <!-- Bottom Turn Banner -->
+                <div id="turnBanner" class="absolute bottom-4 left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-full glass-panel text-xs sm:text-sm font-bold text-sky-300 border border-sky-500/30 shadow-2xl flex items-center gap-2.5 pointer-events-none transition-all duration-300">
+                    <span id="turnIndicatorDot" class="w-3 h-3 rounded-full bg-sky-400 animate-ping"></span>
+                    <span id="turnBannerText">Player 1's Turn — Select Column 1..10</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Log Box -->
+        <div class="w-full max-w-[650px] glass-panel rounded-xl p-3 border border-slate-800 text-xs font-mono shadow-inner">
+            <div class="text-slate-400 font-sans font-bold uppercase tracking-wider text-[10px] mb-1 flex justify-between items-center">
+                <span>Game Action History</span>
+                <span id="simStateBadge" class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Ready</span>
+            </div>
+            <div id="eventLog" class="h-16 overflow-y-auto space-y-1 text-slate-300 pr-1">
+                <div class="text-slate-500 italic">Game initialized. Select a column to drop a marble.</div>
+            </div>
+        </div>
+    </main>
+
+    <div id="modalNewGame" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-panel p-6 sm:p-8 rounded-3xl max-w-md w-full border border-slate-700 shadow-2xl space-y-5">
+            <div class="text-center space-y-1">
+                <h2 class="font-outfit text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-indigo-400">Match Setup</h2>
+                <p class="text-xs text-slate-400">Choose game mode and enter player names.</p>
+            </div>
+
+            <div class="space-y-3">
+                <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider">Game Mode / Players</label>
+                <div class="grid grid-cols-2 gap-2.5">
+                    <button type="button" data-players="1" class="btnPlayerSelect p-3 rounded-xl bg-slate-800 hover:bg-sky-600/30 border-2 border-slate-700 text-center transition group">
+                        <div class="text-base font-black text-slate-100 group-hover:text-sky-300">1 Player</div>
+                        <div class="text-[10px] font-semibold text-amber-400 mt-0.5">Solo (24 Marbles)</div>
+                    </button>
+                    <button type="button" data-players="2" class="btnPlayerSelect p-3 rounded-xl bg-slate-800 hover:bg-sky-600/30 border-2 border-sky-400 bg-sky-600/20 text-center transition group">
+                        <div class="text-base font-black text-slate-100 group-hover:text-sky-300">2 Players</div>
+                        <div class="text-[10px] font-semibold text-slate-400 mt-0.5">12 Marbles Each</div>
+                    </button>
+                    <button type="button" data-players="3" class="btnPlayerSelect p-3 rounded-xl bg-slate-800 hover:bg-sky-600/30 border-2 border-slate-700 text-center transition group">
+                        <div class="text-base font-black text-slate-100 group-hover:text-sky-300">3 Players</div>
+                        <div class="text-[10px] font-semibold text-slate-400 mt-0.5">8 Marbles Each</div>
+                    </button>
+                    <button type="button" data-players="4" class="btnPlayerSelect p-3 rounded-xl bg-slate-800 hover:bg-sky-600/30 border-2 border-slate-700 text-center transition group">
+                        <div class="text-base font-black text-slate-100 group-hover:text-sky-300">4 Players</div>
+                        <div class="text-[10px] font-semibold text-slate-400 mt-0.5">6 Marbles Each</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Custom Player Names Input Fields -->
+            <div id="playerNamesContainer" class="space-y-2 pt-1">
+                <!-- Injected dynamically by JS -->
+            </div>
+
+            <div class="pt-2 flex gap-3">
+                <button id="btnCancelModal" class="flex-1 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm font-bold transition border border-slate-700">Cancel</button>
+                <button id="btnStartGameConfirm" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white text-sm font-bold shadow-lg shadow-sky-500/25 transition">Start Game</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalRules" class="fixed inset-0 bg-slate-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-panel p-6 sm:p-8 rounded-3xl max-w-lg w-full border border-slate-700 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h2 class="font-outfit text-2xl font-extrabold text-sky-400">Rules of Cascade</h2>
+                <button id="btnCloseRules" class="text-slate-400 hover:text-white text-xl font-bold p-1">✕</button>
+            </div>
+            
+            <div class="space-y-3 text-xs sm:text-sm text-slate-300 leading-relaxed">
+                <div class="p-3.5 bg-sky-950/40 rounded-xl border border-sky-500/30 text-sky-200">
+                    <span class="font-bold text-amber-400">🎯 Objective:</span>
+                    <ul class="list-disc list-inside mt-1 space-y-1">
+                        <li><strong>Solo Challenge:</strong> Place ALL 24 red marbles onto the board gates with 0 marbles reaching the bottom tray!</li>
+                        <li><strong>Multiplayer Match:</strong> Be the FIRST player to empty your hand of marbles. Any marbles exiting out the bottom tray must be picked up into your hand!</li>
+                    </ul>
+                </div>
+                
+                <h3 class="font-bold text-slate-100 text-sm border-b border-slate-800 pb-1">Flip-Flop Gate Rules:</h3>
+                <ul class="list-disc list-inside space-y-2 text-slate-300 pl-1">
+                    <li><strong class="text-sky-300">Empty Gate:</strong>
+                        <ul class="list-circle list-inside pl-4 mt-1 text-slate-400 space-y-1">
+                            <li>Entering on BLOCKED side: Settles into the upper cup and stays caught.</li>
+                            <li>Entering on OPEN side: Passes straight through and FLIPS the gate!</li>
+                        </ul>
+                    </li>
+                    <li><strong class="text-amber-300">Occupied Gate & Spillover Gap:</strong>
+                        <ul class="list-circle list-inside pl-4 mt-1 text-slate-400 space-y-1">
+                            <li>When a marble arrives at a gate already holding a marble, it CANNOT enter the cup.</li>
+                            <li>It slides through the prominent cutout gap in the wall into the adjacent path!</li>
+                            <li>Going down the adjacent path FLIPS the gate and RELEASING the trapped marble on that side!</li>
+                        </ul>
+                    </li>
+                    <li><strong class="text-rose-400">Bottom Collection Tray:</strong> Any marble reaching the bottom rests in the tray for 1 second before returning to your hand!</li>
+                </ul>
+            </div>
+
+            <button id="btnGotIt" class="w-full py-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-sm transition shadow-lg shadow-sky-500/20">Got It!</button>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="modalWin" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-panel p-8 rounded-3xl max-w-md w-full border border-emerald-500/30 shadow-2xl text-center space-y-6">
+            <div class="w-20 h-20 mx-auto rounded-full bg-emerald-500/20 border-2 border-emerald-400 flex items-center justify-center text-4xl animate-bounce">
+                🏆
+            </div>
+            <div class="space-y-2">
+                <h2 id="winTitle" class="font-outfit text-3xl font-black text-emerald-400">Player 1 Wins!</h2>
+                <p id="winDesc" class="text-xs text-slate-300">Successfully emptied their hand of all marbles!</p>
+            </div>
+            <button id="btnPlayAgain" class="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-sm shadow-lg shadow-emerald-500/25 transition">
+                Play Again
+            </button>
+        </div>
+    </div>
+
+    <script>
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playDrop() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(540, now);
+                osc.frequency.exponentialRampToValueAtTime(190, now + 0.08);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.08);
+            }
+
+            playGateFlip() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(320, now);
+                osc.frequency.exponentialRampToValueAtTime(110, now + 0.07);
+                gain.gain.setValueAtTime(0.4, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.07);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.07);
+            }
+
+            playDeflection() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(680, now);
+                osc.frequency.exponentialRampToValueAtTime(340, now + 0.1);
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            }
+
+            playCatch() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(390, now);
+                osc.frequency.exponentialRampToValueAtTime(230, now + 0.06);
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.06);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.06);
+            }
+
+            playTrayHit() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.exponentialRampToValueAtTime(90, now + 0.12);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.12);
+            }
+
+            playVictory() {
+                if (this.muted) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+                    gain.gain.setValueAtTime(0.3, now + idx * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.35);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now + idx * 0.12);
+                    osc.stop(now + idx * 0.12 + 0.35);
+                });
+            }
+        }
+
+        const audio = new SoundEngine();
+    </script>
+
+    <script>
+        const CANVAS_WIDTH = 650;
+        const CANVAS_HEIGHT = 1020;
+        const NUM_PATHS = 10;
+        const PATH_WIDTH = CANVAS_WIDTH / NUM_PATHS; // 65px
+        const WALL_THICKNESS = 8;
+        const MARBLE_RADIUS = 21; // ~85% path width
+        const TOTAL_MARBLES = 24;
+
+        // 7 Rows Y positions
+        const ROW_YS = [120, 220, 320, 420, 520, 620, 720];
+        const BUCKET_Y = 920;
+
+        // 7 Staggered Gate Rows (Barrier Wall Indices 1..9)
+        // Row 1 (Odd): 1, 3, 5, 7, 9 (5 gates)
+        // Row 2 (Even): 2, 4, 6, 8 (4 gates)
+        // Row 3 (Odd): 1, 3, 5, 7, 9 (5 gates)
+        // Row 4 (Even): 2, 4, 6, 8 (4 gates)
+        // Row 5 (Odd): 1, 3, 5, 7, 9 (5 gates)
+        // Row 6 (Even): 2, 4, 6, 8 (4 gates)
+        // Row 7 (Odd): 1, 3, 5, 7, 9 (5 gates)
+        // Total = 32 flip-flop gates
+        const GATE_ROWS = [
+            [1, 3, 5, 7, 9],    // Row 1 (5 gates)
+            [2, 4, 6, 8],       // Row 2 (4 gates)
+            [1, 3, 5, 7, 9],    // Row 3 (5 gates)
+            [2, 4, 6, 8],       // Row 4 (4 gates)
+            [1, 3, 5, 7, 9],    // Row 5 (5 gates)
+            [2, 4, 6, 8],       // Row 6 (4 gates)
+            [1, 3, 5, 7, 9]     // Row 7 (5 gates)
+        ];
+
+        const MAX_ANGLE = 0.488; // ~28 degrees tilt
+
+        class CascadeGame {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+
+                this.numPlayers = 2;
+                this.players = [];
+                this.activePlayerIdx = 0;
+
+                this.gates = [];
+                this.marbles = [];
+
+                this.isSimulating = false;
+                this.hoveredCol = -1;
+                this.marbleIdCounter = 0;
+
+                this.trayTimer = 0;
+                this.isCollectingTray = false;
+
+                this.initGates();
+            }
+
+            getPathCenterX(col) {
+                return (col + 0.5) * PATH_WIDTH;
+            }
+
+            getWallX(wallIdx) {
+                return wallIdx * PATH_WIDTH;
+            }
+
+            initGates(randomize = false) {
+                this.gates = [];
+                GATE_ROWS.forEach((rowWalls, r) => {
+                    rowWalls.forEach(w => {
+                        // state -1: LEFT_TRAP (Cup blocks left path w-1, right path w open)
+                        // state  1: RIGHT_TRAP (Cup blocks right path w, left path w-1 open)
+                        const initialState = randomize ? (Math.random() > 0.5 ? 1 : -1) : -1;
+                        this.gates.push({
+                            id: `g_${r}_${w}`,
+                            row: r,
+                            wall: w, // Wall index 1..9
+                            x: this.getWallX(w),
+                            y: ROW_YS[r],
+                            state: initialState,
+                            angle: initialState === -1 ? -MAX_ANGLE : MAX_ANGLE,
+                            targetAngle: initialState === -1 ? -MAX_ANGLE : MAX_ANGLE,
+                            holdingMarble: null
+                        });
+                    });
+                });
+            }
+
+            startMatch(numPlayers, customNames = []) {
+                this.numPlayers = numPlayers;
+
+                if (numPlayers === 1) {
+                    // Solo Mode: 1 Player gets ALL 24 marbles
+                    this.players = [{
+                        id: 0,
+                        name: customNames[0] || "Solo Player",
+                        marbles: 24,
+                        isSolo: true
+                    }];
+                } else {
+                    const marblesPerPlayer = Math.floor(TOTAL_MARBLES / numPlayers);
+                    this.players = Array.from({ length: numPlayers }, (_, i) => ({
+                        id: i,
+                        name: customNames[i] || `Player ${i + 1}`,
+                        marbles: marblesPerPlayer,
+                        isSolo: false
+                    }));
+                }
+
+                this.activePlayerIdx = 0;
+                this.marbles = [];
+                this.isSimulating = false;
+                this.isCollectingTray = false;
+                this.trayTimer = 0;
+
+                this.gates.forEach(g => g.holdingMarble = null);
+
+                this.updateUI();
+                if (numPlayers === 1) {
+                    this.logEvent(`🎮 Solo Challenge started! Place all 24 red marbles onto board gates.`);
+                } else {
+                    this.logEvent(`Match started with ${numPlayers} players (${this.players[0].marbles} marbles each).`);
+                }
+            }
+
+            dropMarble(col) {
+                if (this.isSimulating || this.isCollectingTray) return;
+
+                const player = this.players[this.activePlayerIdx];
+                if (player.marbles <= 0) return;
+
+                player.marbles--;
+                this.isSimulating = true;
+
+                audio.playDrop();
+
+                const marble = {
+                    id: ++this.marbleIdCounter,
+                    x: this.getPathCenterX(col),
+                    y: 20,
+                    vy: 4.5,
+                    path: col,
+                    state: 'FALLING', // 'FALLING', 'DEFLECTING', 'TRAPPED', 'IN_TRAY', 'FLYING_BACK'
+                    deflectProgress: 0,
+                    deflectFromX: 0,
+                    deflectFromY: 0,
+                    deflectToX: 0,
+                    deflectToY: 0,
+                    targetPath: -1
+                };
+
+                this.marbles.push(marble);
+                this.logEvent(`${player.name} dropped a marble down Column ${col + 1}.`);
+                this.updateUI();
+            }
+
+            updatePhysics() {
+                // Smooth Gate rotational transition
+                this.gates.forEach(g => {
+                    const diff = g.targetAngle - g.angle;
+                    if (Math.abs(diff) > 0.01) {
+                        g.angle += diff * 0.25;
+                    } else {
+                        g.angle = g.targetAngle;
+                    }
+                });
+
+                let activeMotion = false;
+
+                // Sort falling marbles from lowest Y to highest Y
+                const fallingMarbles = this.marbles.filter(m => m.state === 'FALLING' || m.state === 'DEFLECTING');
+                fallingMarbles.sort((a, b) => b.y - a.y);
+
+                fallingMarbles.forEach(m => {
+                    activeMotion = true;
+
+                    // STATE: DEFLECTING (Deflecting through wall cutout gap into adjacent path)
+                    if (m.state === 'DEFLECTING') {
+                        m.deflectProgress += 0.12;
+                        if (m.deflectProgress >= 1) {
+                            m.x = m.deflectToX;
+                            m.y = m.deflectToY;
+                            m.path = m.targetPath;
+                            m.state = 'FALLING';
+                            m.vy = 4.5;
+                        } else {
+                            const t = m.deflectProgress;
+                            const invT = 1 - t;
+                            const ctrlX = (m.deflectFromX + m.deflectToX) / 2;
+                            const ctrlY = (m.deflectFromY + m.deflectToY) / 2 - 10;
+                            m.x = invT * invT * m.deflectFromX + 2 * invT * t * ctrlX + t * t * m.deflectToX;
+                            m.y = invT * invT * m.deflectFromY + 2 * invT * t * ctrlY + t * t * m.deflectToY;
+                        }
+                        return;
+                    }
+
+                    // STATE: FALLING
+                    if (m.state === 'FALLING') {
+                        m.vy = Math.min(m.vy + 0.35, 7.5);
+                        m.y += m.vy;
+
+                        // Check Reaching Bottom Collection Tray
+                        if (m.y >= BUCKET_Y) {
+                            m.y = BUCKET_Y;
+                            m.state = 'IN_TRAY';
+                            m.vy = 0;
+                            audio.playTrayHit();
+                            this.logEvent(`⚠️ Marble reached the bottom tray!`);
+                            return;
+                        }
+
+                        // Check Gate Mechanics
+                        this.checkGateMechanics(m);
+                    }
+                });
+
+                // Flying marbles back to active player hand animation
+                const flyingMarbles = this.marbles.filter(m => m.state === 'FLYING_BACK');
+                flyingMarbles.forEach(m => {
+                    activeMotion = true;
+                    m.flyProgress += 0.08;
+                    if (m.flyProgress >= 1) {
+                        this.marbles = this.marbles.filter(item => item.id !== m.id);
+                    } else {
+                        m.x = (1 - m.flyProgress) * m.flyStartX + m.flyProgress * m.flyEndX;
+                        m.y = (1 - m.flyProgress) * m.flyStartY + m.flyProgress * m.flyEndY;
+                    }
+                });
+
+                // Handle Bottom Tray 1-Second Visible Delay & Turn Conclusion
+                if (this.isSimulating && !activeMotion) {
+                    const trayMarbles = this.marbles.filter(m => m.state === 'IN_TRAY');
+
+                    if (trayMarbles.length === 0) {
+                        this.isSimulating = false;
+                        this.finishTurn(0);
+                    } else if (!this.isCollectingTray) {
+                        this.isCollectingTray = true;
+                        this.trayTimer = Date.now();
+                        const player = this.players[this.activePlayerIdx];
+                        this.updateBanner(`📥 ${player.name} collects ${trayMarbles.length} marble(s) from tray...`);
+                    } else {
+                        // 1.0 second visible tray delay completed
+                        if (Date.now() - this.trayTimer >= 1000) {
+                            const count = trayMarbles.length;
+                            const activePlayer = this.players[this.activePlayerIdx];
+                            const cardEl = document.getElementById(`playerCard_${activePlayer.id}`);
+                            const cardRect = cardEl ? cardEl.getBoundingClientRect() : { left: 100, top: 50 };
+                            const canvasRect = this.canvas.getBoundingClientRect();
+
+                            const targetX = (cardRect.left + cardRect.width / 2 - canvasRect.left) * (CANVAS_WIDTH / canvasRect.width);
+                            const targetY = (cardRect.top + cardRect.height / 2 - canvasRect.top) * (CANVAS_HEIGHT / canvasRect.height);
+
+                            trayMarbles.forEach(m => {
+                                m.state = 'FLYING_BACK';
+                                m.flyProgress = 0;
+                                m.flyStartX = m.x;
+                                m.flyStartY = m.y;
+                                m.flyEndX = targetX;
+                                m.flyEndY = targetY;
+                            });
+
+                            activePlayer.marbles += count;
+                            this.isCollectingTray = false;
+                            this.isSimulating = false;
+                            this.finishTurn(count);
+                        }
+                    }
+                }
+            }
+
+            checkGateMechanics(m) {
+                const path = m.path;
+
+                this.gates.forEach(g => {
+                    const isLeftPath = (g.wall === path + 1);
+                    const isRightPath = (g.wall === path);
+
+                    if (!isLeftPath && !isRightPath) return;
+
+                    const cupY = g.y - 32;  // Height of upper cup
+                    const wingY = g.y + 10; // Height of lower wing
+
+                    // CASE 1: MARBLE ON LEFT PATH (P = g.wall - 1)
+                    if (isLeftPath) {
+                        // Check Cup Level (BLOCKED SIDE)
+                        if (g.state === -1 && Math.abs(m.y - cupY) < 12) { // Gate facing LEFT
+                            if (g.holdingMarble === null) {
+                                // CUP EMPTY -> LAND AND TRAP
+                                m.state = 'TRAPPED';
+                                m.x = g.x - 18;
+                                m.y = cupY;
+                                m.vy = 0;
+                                g.holdingMarble = m;
+                                audio.playCatch();
+                                this.logEvent(`Marble caught in Gate (Wall ${g.wall}, Row ${g.row + 1}).`);
+                            } else if (g.holdingMarble !== m) {
+                                // CUP OCCUPIED -> DEFLECT THROUGH WALL GAP RIGHT!
+                                m.state = 'DEFLECTING';
+                                m.deflectProgress = 0;
+                                m.deflectFromX = m.x;
+                                m.deflectFromY = m.y;
+                                m.targetPath = path + 1; // Right path
+                                m.deflectToX = this.getPathCenterX(m.targetPath);
+                                m.deflectToY = g.y + 10;
+                                audio.playDeflection();
+                                this.logEvent(`🔀 Path ${path + 1} blocked! Marble deflected through wall gap into Path ${m.targetPath + 1}.`);
+                            }
+                        }
+
+                        // Check Wing Level (OPEN SIDE)
+                        if (g.state === 1 && Math.abs(m.y - wingY) < 14) { // Gate facing RIGHT (Left path OPEN)
+                            // Passes left path -> FLIPS GATE TO FACING LEFT (-1)!
+                            g.state = -1;
+                            g.targetAngle = -MAX_ANGLE;
+                            audio.playGateFlip();
+
+                            // RELEASE TRAPPED MARBLE ON RIGHT CUP IF PRESENT
+                            if (g.holdingMarble !== null) {
+                                const released = g.holdingMarble;
+                                g.holdingMarble = null;
+                                released.state = 'FALLING';
+                                released.vy = 3.5;
+                                audio.playGateFlip();
+                                this.logEvent(`✨ Gate on Wall ${g.wall} flipped! Released trapped marble down Path ${released.path + 1}!`);
+                            }
+                        }
+                    }
+
+                    // CASE 2: MARBLE ON RIGHT PATH (P = g.wall)
+                    if (isRightPath) {
+                        // Check Cup Level (BLOCKED SIDE)
+                        if (g.state === 1 && Math.abs(m.y - cupY) < 12) { // Gate facing RIGHT
+                            if (g.holdingMarble === null) {
+                                // CUP EMPTY -> LAND AND TRAP
+                                m.state = 'TRAPPED';
+                                m.x = g.x + 18;
+                                m.y = cupY;
+                                m.vy = 0;
+                                g.holdingMarble = m;
+                                audio.playCatch();
+                                this.logEvent(`Marble caught in Gate (Wall ${g.wall}, Row ${g.row + 1}).`);
+                            } else if (g.holdingMarble !== m) {
+                                // CUP OCCUPIED -> DEFLECT THROUGH WALL GAP LEFT!
+                                m.state = 'DEFLECTING';
+                                m.deflectProgress = 0;
+                                m.deflectFromX = m.x;
+                                m.deflectFromY = m.y;
+                                m.targetPath = path - 1; // Left path
+                                m.deflectToX = this.getPathCenterX(m.targetPath);
+                                m.deflectToY = g.y + 10;
+                                audio.playDeflection();
+                                this.logEvent(`🔀 Path ${path + 1} blocked! Marble deflected through wall gap into Path ${m.targetPath + 1}.`);
+                            }
+                        }
+
+                        // Check Wing Level (OPEN SIDE)
+                        if (g.state === -1 && Math.abs(m.y - wingY) < 14) { // Gate facing LEFT (Right path OPEN)
+                            // Passes right path -> FLIPS GATE TO FACING RIGHT (1)!
+                            g.state = 1;
+                            g.targetAngle = MAX_ANGLE;
+                            audio.playGateFlip();
+
+                            // RELEASE TRAPPED MARBLE ON LEFT CUP IF PRESENT
+                            if (g.holdingMarble !== null) {
+                                const released = g.holdingMarble;
+                                g.holdingMarble = null;
+                                released.state = 'FALLING';
+                                released.vy = 3.5;
+                                audio.playGateFlip();
+                                this.logEvent(`✨ Gate on Wall ${g.wall} flipped! Released trapped marble down Path ${released.path + 1}!`);
+                            }
+                        }
+                    }
+                });
+            }
+
+            finishTurn(collectedCount) {
+                const activePlayer = this.players[this.activePlayerIdx];
+
+                if (activePlayer.isSolo) {
+                    const trappedCount = this.marbles.filter(m => m.state === 'TRAPPED').length;
+                    if (trappedCount === 24 && activePlayer.marbles === 0) {
+                        audio.playVictory();
+                        showWinModal(activePlayer, "Solo Challenge Master! All 24 red marbles placed on board gates!");
+                        return;
+                    }
+                    if (collectedCount > 0) {
+                        this.logEvent(`📥 Picked up ${collectedCount} marble(s) back to hand. (${trappedCount}/24 on board)`);
+                    } else {
+                        this.logEvent(`✅ Marble placed safely on board! (${trappedCount}/24 on board)`);
+                    }
+                } else {
+                    if (collectedCount > 0) {
+                        this.logEvent(`📥 ${activePlayer.name} picked up ${collectedCount} marble(s). Hand count: ${activePlayer.marbles}`);
+                    } else {
+                        this.logEvent(`✅ ${activePlayer.name} had a safe turn! 0 marbles collected.`);
+                    }
+
+                    if (activePlayer.marbles <= 0) {
+                        audio.playVictory();
+                        showWinModal(activePlayer, "Successfully emptied their hand of all marbles!");
+                        return;
+                    }
+
+                    // Advance turn
+                    this.activePlayerIdx = (this.activePlayerIdx + 1) % this.numPlayers;
+                }
+
+                this.updateUI();
+            }
+
+            render() {
+                this.ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+                // 1. Dark Board Background
+                this.ctx.fillStyle = "#070a12";
+                this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+                // 2. Channel Guides & Hover Highlights
+                for (let c = 0; c < NUM_PATHS; c++) {
+                    const x = c * PATH_WIDTH;
+                    if (c === this.hoveredCol && !this.isSimulating) {
+                        this.ctx.fillStyle = "rgba(56, 189, 248, 0.08)";
+                        this.ctx.fillRect(x, 0, PATH_WIDTH, BUCKET_Y);
+                    }
+                    this.ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
+                    this.ctx.lineWidth = 1;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x + PATH_WIDTH / 2, 0);
+                    this.ctx.lineTo(x + PATH_WIDTH / 2, BUCKET_Y);
+                    this.ctx.stroke();
+                }
+
+                // 3. Render Barrier Walls & Prominent Wall Gaps
+                this.renderWalls();
+
+                // 4. Render Symmetrical Flip-Flop Rocker Gates
+                this.gates.forEach(g => this.renderGate(g));
+
+                // 5. Render Glossy 3D Red Marbles
+                this.marbles.forEach(m => this.renderMarble(m));
+
+                // 6. Render Bottom Tray
+                this.renderBottomTray();
+
+                // 7. Hover Drop Indicator Preview
+                if (this.hoveredCol >= 0 && !this.isSimulating) {
+                    const activePlayer = this.players[this.activePlayerIdx];
+                    if (activePlayer && activePlayer.marbles > 0) {
+                        this.renderMarble({
+                            x: this.getPathCenterX(this.hoveredCol),
+                            y: 25,
+                            preview: true
+                        });
+                    }
+                }
+            }
+
+            renderWalls() {
+                this.ctx.fillStyle = "#64748b"; // Sleek gray walls
+
+                for (let w = 0; w <= NUM_PATHS; w++) {
+                    const x = this.getWallX(w) - WALL_THICKNESS / 2;
+
+                    // Outer side walls solid
+                    if (w === 0 || w === NUM_PATHS) {
+                        this.ctx.fillRect(x, 0, WALL_THICKNESS, BUCKET_Y);
+                        continue;
+                    }
+
+                    let currentY = 0;
+                    const wallGates = this.gates.filter(g => g.wall === w).sort((a,b) => a.y - b.y);
+
+                    wallGates.forEach(g => {
+                        // Prominent wall gap cutout right above each gate pivot
+                        const gapTop = g.y - 55;
+                        const gapBottom = g.y - 12;
+
+                        if (gapTop > currentY) {
+                            this.ctx.fillRect(x, currentY, WALL_THICKNESS, gapTop - currentY);
+                        }
+
+                        // Rounded gap tips for smooth visual cutout
+                        this.ctx.beginPath();
+                        this.ctx.arc(x + WALL_THICKNESS/2, gapTop, WALL_THICKNESS/2, 0, Math.PI*2);
+                        this.ctx.arc(x + WALL_THICKNESS/2, gapBottom, WALL_THICKNESS/2, 0, Math.PI*2);
+                        this.ctx.fill();
+
+                        currentY = gapBottom;
+                    });
+
+                    if (currentY < BUCKET_Y) {
+                        this.ctx.fillRect(x, currentY, WALL_THICKNESS, BUCKET_Y - currentY);
+                    }
+                }
+            }
+
+            renderGate(g) {
+                this.ctx.save();
+                this.ctx.translate(g.x, g.y);
+                this.ctx.rotate(g.angle);
+
+                this.ctx.fillStyle = "#09090b";
+                this.ctx.strokeStyle = "#475569";
+                this.ctx.lineWidth = 2;
+
+                // Central Stem
+                this.ctx.beginPath();
+                this.ctx.roundRect(-5, -30, 10, 60, 3);
+                this.ctx.fill();
+                this.ctx.stroke();
+
+                // Upper Crescent Cup (Symmetrical curve)
+                this.ctx.beginPath();
+                this.ctx.arc(0, -30, 22, Math.PI * 0.85, Math.PI * 0.15, true);
+                this.ctx.arc(0, -35, 16, Math.PI * 0.15, Math.PI * 0.85, false);
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
+
+                // Lower Crescent Wing (Symmetrical curve)
+                this.ctx.beginPath();
+                this.ctx.arc(0, 30, 22, Math.PI * 0.15, Math.PI * 0.85, false);
+                this.ctx.arc(0, 35, 16, Math.PI * 0.85, Math.PI * 0.15, true);
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.stroke();
+
+                // White Pivot Pin Circle
+                this.ctx.fillStyle = "#ffffff";
+                this.ctx.strokeStyle = "#000000";
+                this.ctx.lineWidth = 1.5;
+                this.ctx.beginPath();
+                this.ctx.arc(0, 0, 4.5, 0, Math.PI * 2);
+                this.ctx.fill();
+                this.ctx.stroke();
+
+                this.ctx.restore();
+            }
+
+            renderMarble(m) {
+                this.ctx.save();
+
+                if (m.preview) {
+                    this.ctx.globalAlpha = 0.5;
+                }
+
+                this.ctx.shadowColor = "rgba(0, 0, 0, 0.75)";
+                this.ctx.shadowBlur = 8;
+                this.ctx.shadowOffsetY = 4;
+
+                const grad = this.ctx.createRadialGradient(
+                    m.x - 6, m.y - 6, 3,
+                    m.x, m.y, MARBLE_RADIUS
+                );
+
+                grad.addColorStop(0, '#fca5a5');
+                grad.addColorStop(0.35, '#ef4444');
+                grad.addColorStop(0.8, '#991b1b');
+                grad.addColorStop(1, '#450a0a');
+
+                this.ctx.fillStyle = grad;
+                this.ctx.beginPath();
+                this.ctx.arc(m.x, m.y, MARBLE_RADIUS, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                this.ctx.shadowBlur = 0;
+                this.ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+                this.ctx.beginPath();
+                this.ctx.arc(m.x - 5, m.y - 6, MARBLE_RADIUS * 0.35, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                this.ctx.restore();
+            }
+
+            renderBottomTray() {
+                this.ctx.fillStyle = "#0f172a";
+                this.ctx.fillRect(0, BUCKET_Y, CANVAS_WIDTH, CANVAS_HEIGHT - BUCKET_Y);
+
+                this.ctx.strokeStyle = "#38bdf8";
+                this.ctx.lineWidth = 3;
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, BUCKET_Y);
+                this.ctx.lineTo(CANVAS_WIDTH, BUCKET_Y);
+                this.ctx.stroke();
+
+                this.ctx.fillStyle = "#94a3b8";
+                this.ctx.font = "bold 12px Inter, sans-serif";
+                this.ctx.textAlign = "center";
+                this.ctx.fillText("BOTTOM COLLECTION TRAY", CANVAS_WIDTH / 2, BUCKET_Y + 50);
+            }
+
+            logEvent(msg) {
+                const logEl = document.getElementById('eventLog');
+                const time = new Date().toLocaleTimeString([], { hour12: false, minute:'2-digit', second:'2-digit' });
+                const item = document.createElement('div');
+                item.className = "text-slate-300";
+                item.innerHTML = `<span class="text-slate-500">[${time}]</span> ${msg}`;
+                logEl.appendChild(item);
+                logEl.scrollTop = logEl.scrollHeight;
+            }
+
+            updateBanner(text) {
+                const activeP = this.players[this.activePlayerIdx];
+                if (activeP) {
+                    if (activeP.isSolo) {
+                        const trapped = this.marbles.filter(m => m.state === 'TRAPPED').length;
+                        document.getElementById('turnBannerText').innerText = text || `${activeP.name} — ${trapped}/24 Marbles Placed on Board`;
+                    } else {
+                        document.getElementById('turnBannerText').innerText = text || `${activeP.name}'s Turn — Select Column 1..10`;
+                    }
+                    document.getElementById('turnIndicatorDot').className = `w-3 h-3 rounded-full bg-sky-400 animate-ping`;
+                }
+            }
+
+            updateUI() {
+                const sb = document.getElementById('scoreboard');
+                sb.innerHTML = '';
+
+                this.players.forEach((p, idx) => {
+                    const isActive = (idx === this.activePlayerIdx);
+                    
+                    // Render visual red marble icons for hand inventory
+                    let marblesIconsHtml = '<div class="flex flex-wrap gap-1 mt-1.5 max-h-16 overflow-y-auto pr-1">';
+                    for (let i = 0; i < p.marbles; i++) {
+                        marblesIconsHtml += '<span class="mini-red-marble"></span>';
+                    }
+                    if (p.marbles === 0) {
+                        marblesIconsHtml += '<span class="text-[10px] text-emerald-400 font-bold">0 Marbles Left!</span>';
+                    }
+                    marblesIconsHtml += '</div>';
+
+                    sb.innerHTML += `
+                        <div id="playerCard_${p.id}" class="glass-panel p-3 rounded-2xl border ${isActive ? 'player-card-active' : 'border-slate-800 opacity-65'} transition">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-extrabold text-slate-100">${p.name}</span>
+                                ${isActive ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-400/30">Active</span>' : ''}
+                            </div>
+                            <div class="flex items-baseline gap-2 mt-1">
+                                <span class="text-2xl font-black font-outfit text-white">${p.marbles}</span>
+                                <span class="text-[10px] text-slate-400 font-medium uppercase tracking-wider">In Hand</span>
+                            </div>
+                            ${marblesIconsHtml}
+                        </div>
+                    `;
+                });
+
+                this.updateBanner();
+
+                // Drop Column Buttons
+                const dropContainer = document.getElementById('dropZoneContainer');
+                dropContainer.innerHTML = '';
+                for (let c = 0; c < NUM_PATHS; c++) {
+                    const btn = document.createElement('button');
+                    btn.className = `drop-btn py-2 bg-slate-900/90 hover:bg-sky-500/20 text-slate-200 border border-slate-700 rounded-xl font-bold text-xs flex flex-col items-center justify-center shadow-md`;
+                    btn.disabled = this.isSimulating || this.isCollectingTray;
+                    btn.innerHTML = `<span>Col ${c + 1}</span><span class="text-[10px] text-sky-400">↓</span>`;
+                    btn.onclick = () => this.dropMarble(c);
+                    btn.onmouseenter = () => this.hoveredCol = c;
+                    btn.onmouseleave = () => this.hoveredCol = -1;
+                    dropContainer.appendChild(btn);
+                }
+
+                document.getElementById('simStateBadge').innerText = (this.isSimulating || this.isCollectingTray) ? "Simulating..." : "Ready";
+                document.getElementById('simStateBadge').className = (this.isSimulating || this.isCollectingTray) 
+                    ? "px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/20 text-amber-400 border border-amber-500/30 animate-pulse" 
+                    : "px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+            }
+        }
+
+        let game = null;
+
+        window.addEventListener('load', () => {
+            game = new CascadeGame();
+            game.startMatch(2, ["Player 1", "Player 2"]);
+
+            const canvas = document.getElementById('gameCanvas');
+            canvas.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = CANVAS_WIDTH / rect.width;
+                const mouseX = (e.clientX - rect.left) * scaleX;
+                const col = Math.floor(mouseX / PATH_WIDTH);
+                game.hoveredCol = (col >= 0 && col < NUM_PATHS) ? col : -1;
+            });
+
+            canvas.addEventListener('mouseleave', () => {
+                game.hoveredCol = -1;
+            });
+
+            canvas.addEventListener('click', () => {
+                if (game.hoveredCol >= 0 && game.hoveredCol < NUM_PATHS) {
+                    game.dropMarble(game.hoveredCol);
+                }
+            });
+
+            // Fullscreen Button
+            document.getElementById('btnFullscreen').onclick = () => {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                    document.getElementById('fullscreenIcon').innerText = "🗗";
+                } else {
+                    document.exitFullscreen().catch(() => {});
+                    document.getElementById('fullscreenIcon').innerText = "⛶";
+                }
+            };
+
+            document.getElementById('btnNewGame').onclick = () => {
+                renderPlayerNameInputs(selectedPlayersCount);
+                showModal('modalNewGame');
+            };
+
+            document.getElementById('btnRandomize').onclick = () => {
+                game.initGates(true);
+                game.logEvent("🔀 All gates randomized!");
+            };
+
+            document.getElementById('btnHowToPlay').onclick = () => showModal('modalRules');
+            document.getElementById('btnCloseRules').onclick = () => hideModal('modalRules');
+            document.getElementById('btnGotIt').onclick = () => hideModal('modalRules');
+            document.getElementById('btnCancelModal').onclick = () => hideModal('modalNewGame');
+
+            document.getElementById('btnMute').onclick = () => {
+                audio.muted = !audio.muted;
+                document.getElementById('muteIcon').innerText = audio.muted ? "🔇" : "🔊";
+            };
+
+            let selectedPlayersCount = 2;
+
+            function renderPlayerNameInputs(count) {
+                const container = document.getElementById('playerNamesContainer');
+                container.innerHTML = '<label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Player Names</label>';
+                for (let i = 0; i < count; i++) {
+                    const defaultName = count === 1 ? "Solo Player" : `Player ${i + 1}`;
+                    container.innerHTML += `
+                        <input type="text" id="inputPlayerName_${i}" value="${defaultName}" placeholder="Enter Player ${i + 1} Name" 
+                            class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-semibold text-slate-200 focus:outline-none focus:border-sky-400">
+                    `;
+                }
+            }
+
+            document.querySelectorAll('.btnPlayerSelect').forEach(btn => {
+                btn.onclick = () => {
+                    document.querySelectorAll('.btnPlayerSelect').forEach(b => {
+                        b.classList.remove('border-sky-400', 'bg-sky-600/20');
+                        b.classList.add('border-slate-700');
+                    });
+                    btn.classList.remove('border-slate-700');
+                    btn.classList.add('border-sky-400', 'bg-sky-600/20');
+                    selectedPlayersCount = parseInt(btn.getAttribute('data-players'));
+                    renderPlayerNameInputs(selectedPlayersCount);
+                };
+            });
+
+            document.getElementById('btnStartGameConfirm').onclick = () => {
+                const names = [];
+                for (let i = 0; i < selectedPlayersCount; i++) {
+                    const val = document.getElementById(`inputPlayerName_${i}`)?.value.trim();
+                    names.push(val || (selectedPlayersCount === 1 ? "Solo Player" : `Player ${i + 1}`));
+                }
+                hideModal('modalNewGame');
+                game.startMatch(selectedPlayersCount, names);
+            };
+
+            document.getElementById('btnPlayAgain').onclick = () => {
+                hideModal('modalWin');
+                const names = game.players.map(p => p.name);
+                game.startMatch(game.numPlayers, names);
+            };
+
+            function loop() {
+                game.updatePhysics();
+                game.render();
+                requestAnimationFrame(loop);
+            }
+            requestAnimationFrame(loop);
+        });
+
+        function showModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function hideModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function showWinModal(player, descText) {
+            document.getElementById('winTitle').innerText = `${player.name} Wins!`;
+            document.getElementById('winDesc').innerText = descText || `Successfully emptied their hand of all marbles!`;
+            showModal('modalWin');
+        }
+    </script>
+</body>
+</html>
