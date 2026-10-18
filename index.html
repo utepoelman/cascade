@@ -109,10 +109,23 @@
                 <!-- Drop buttons 1..10 inserted by JS -->
             </div>
 
+            <!-- End Turn (multiplayer: available after at least one drop) -->
+            <button id="btnEndTurn" class="hidden w-full mb-2 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300 text-xs font-bold transition disabled:opacity-30 disabled:cursor-not-allowed">
+                ✋ End Turn
+            </button>
+
             <!-- HTML5 Canvas Viewport -->
             <div class="relative w-full bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 shadow-2xl">
                 <canvas id="gameCanvas" width="650" height="1020" class="w-full h-auto block bg-slate-950 cursor-pointer"></canvas>
                 
+                <!-- First Player Announcement -->
+                <div id="firstPlayerOverlay" class="absolute inset-0 z-20 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm hidden pointer-events-none">
+                    <div class="glass-panel rounded-3xl px-8 py-6 text-center border border-amber-400/40 shadow-2xl">
+                        <div id="firstPlayerLabel" class="text-xs uppercase tracking-widest text-amber-400 font-bold">🎲 Choosing first player…</div>
+                        <div id="firstPlayerName" class="font-outfit text-3xl sm:text-4xl font-black text-white mt-2">—</div>
+                    </div>
+                </div>
+
                 <!-- Bottom Turn Banner -->
                 <div id="turnBanner" class="absolute bottom-4 left-1/2 -translate-x-1/2 px-5 py-2.5 rounded-full glass-panel text-xs sm:text-sm font-bold text-sky-300 border border-sky-500/30 shadow-2xl flex items-center gap-2.5 pointer-events-none transition-all duration-300">
                     <span id="turnIndicatorDot" class="w-3 h-3 rounded-full bg-sky-400 animate-ping"></span>
@@ -149,15 +162,15 @@
                     </button>
                     <button type="button" data-players="2" class="btnPlayerSelect p-3 rounded-xl bg-slate-800 hover:bg-sky-600/30 border-2 border-sky-400 bg-sky-600/20 text-center transition group">
                         <div class="text-base font-black text-slate-100 group-hover:text-sky-300">2 Players</div>
-                        <div class="text-[10px] font-semibold text-slate-400 mt-0.5">12 Marbles Each</div>
+                        <div class="text-[10px] font-semibold text-slate-400 mt-0.5">Pass &amp; Play</div>
                     </button>
                     <button type="button" data-players="3" class="btnPlayerSelect p-3 rounded-xl bg-slate-800 hover:bg-sky-600/30 border-2 border-slate-700 text-center transition group">
                         <div class="text-base font-black text-slate-100 group-hover:text-sky-300">3 Players</div>
-                        <div class="text-[10px] font-semibold text-slate-400 mt-0.5">8 Marbles Each</div>
+                        <div class="text-[10px] font-semibold text-slate-400 mt-0.5">Pass &amp; Play</div>
                     </button>
                     <button type="button" data-players="4" class="btnPlayerSelect p-3 rounded-xl bg-slate-800 hover:bg-sky-600/30 border-2 border-slate-700 text-center transition group">
                         <div class="text-base font-black text-slate-100 group-hover:text-sky-300">4 Players</div>
-                        <div class="text-[10px] font-semibold text-slate-400 mt-0.5">6 Marbles Each</div>
+                        <div class="text-[10px] font-semibold text-slate-400 mt-0.5">Pass &amp; Play</div>
                     </button>
                 </div>
             </div>
@@ -165,6 +178,13 @@
             <!-- Custom Player Names Input Fields -->
             <div id="playerNamesContainer" class="space-y-2 pt-1">
                 <!-- Injected dynamically by JS -->
+            </div>
+
+            <!-- Starting marbles per player (multiplayer only) -->
+            <div id="startMarblesWrap" class="space-y-1">
+                <label for="inputStartMarbles" class="block text-xs font-bold text-slate-300 uppercase tracking-wider">Starting Marbles Per Player</label>
+                <input type="number" id="inputStartMarbles" value="12" min="1" max="24"
+                    class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-xs font-semibold text-slate-200 focus:outline-none focus:border-sky-400">
             </div>
 
             <div class="pt-2 flex gap-3">
@@ -186,10 +206,17 @@
                     <span class="font-bold text-amber-400">🎯 Objective:</span>
                     <ul class="list-disc list-inside mt-1 space-y-1">
                         <li><strong>Solo Challenge:</strong> Place ALL 24 red marbles onto the board gates with 0 marbles reaching the bottom tray!</li>
-                        <li><strong>Multiplayer Match:</strong> Be the FIRST player to empty your hand of marbles. Any marbles exiting out the bottom tray must be picked up into your hand!</li>
+                        <li><strong>Multiplayer Match:</strong> Everyone starts with the same number of marbles (12 by default). Be the FIRST player to empty your hand!</li>
                     </ul>
                 </div>
                 
+                <h3 class="font-bold text-slate-100 text-sm border-b border-slate-800 pb-1">Turn Rules:</h3>
+                <ul class="list-disc list-inside space-y-1 text-slate-300 pl-1">
+                    <li>The gates start in random positions and the first player is chosen at random.</li>
+                    <li>On your turn you must drop at least 1 marble and may drop up to 3 (one at a time). You can end your turn after any drop.</li>
+                    <li>If any marble falls all the way through to the bottom tray, you must take ALL marbles that land there and your turn ends immediately.</li>
+                </ul>
+
                 <h3 class="font-bold text-slate-100 text-sm border-b border-slate-800 pb-1">Flip-Flop Gate Rules:</h3>
                 <ul class="list-disc list-inside space-y-2 text-slate-300 pl-1">
                     <li><strong class="text-sky-300">Empty Gate:</strong>
@@ -205,7 +232,7 @@
                             <li>Going down the adjacent path FLIPS the gate and RELEASING the trapped marble on that side!</li>
                         </ul>
                     </li>
-                    <li><strong class="text-rose-400">Bottom Collection Tray:</strong> Any marble reaching the bottom rests in the tray for 1 second before returning to your hand!</li>
+                    <li><strong class="text-rose-400">Bottom Collection Tray:</strong> Any marble reaching the bottom rests in the tray for 1 second before returning to your hand, and your turn ends!</li>
                 </ul>
             </div>
 
@@ -362,6 +389,7 @@
         const WALL_THICKNESS = 8;
         const MARBLE_RADIUS = 21; // ~85% path width
         const TOTAL_MARBLES = 24;
+        const MAX_DROPS_PER_TURN = 3;
 
         // 7 Rows Y positions
         const ROW_YS = [120, 220, 320, 420, 520, 620, 720];
@@ -407,6 +435,12 @@
                 this.trayTimer = 0;
                 this.isCollectingTray = false;
 
+                this.startMarbles = 12;
+                this.firstPlayerIdx = -1;
+                this.inputLocked = false;
+                this.dropsThisTurn = 0;
+                this.announceTimers = [];
+
                 this.initGates();
             }
 
@@ -440,8 +474,15 @@
                 });
             }
 
-            startMatch(numPlayers, customNames = []) {
+            startMatch(numPlayers, customNames = [], startMarbles = this.startMarbles) {
                 this.numPlayers = numPlayers;
+                this.startMarbles = startMarbles;
+
+                // Cancel any announcement still running from a previous match
+                this.announceTimers.forEach(t => { clearTimeout(t); clearInterval(t); });
+                this.announceTimers = [];
+                document.getElementById('firstPlayerOverlay').classList.add('hidden');
+                this.inputLocked = false;
 
                 if (numPlayers === 1) {
                     // Solo Mode: 1 Player gets ALL 24 marbles
@@ -452,38 +493,86 @@
                         isSolo: true
                     }];
                 } else {
-                    const marblesPerPlayer = Math.floor(TOTAL_MARBLES / numPlayers);
                     this.players = Array.from({ length: numPlayers }, (_, i) => ({
                         id: i,
                         name: customNames[i] || `Player ${i + 1}`,
-                        marbles: marblesPerPlayer,
+                        marbles: startMarbles,
                         isSolo: false
                     }));
                 }
 
-                this.activePlayerIdx = 0;
+                // First player is chosen at random in multiplayer
+                this.activePlayerIdx = numPlayers === 1 ? 0 : Math.floor(Math.random() * numPlayers);
+                this.firstPlayerIdx = numPlayers === 1 ? -1 : this.activePlayerIdx;
+
                 this.marbles = [];
                 this.isSimulating = false;
                 this.isCollectingTray = false;
                 this.trayTimer = 0;
 
-                this.gates.forEach(g => g.holdingMarble = null);
+                this.dropsThisTurn = 0;
+
+                // Gates start in random positions (also clears any held marbles)
+                this.initGates(true);
 
                 this.updateUI();
                 if (numPlayers === 1) {
                     this.logEvent(`🎮 Solo Challenge started! Place all 24 red marbles onto board gates.`);
                 } else {
-                    this.logEvent(`Match started with ${numPlayers} players (${this.players[0].marbles} marbles each).`);
+                    this.logEvent(`Match started with ${numPlayers} players (${startMarbles} marbles each).`);
+                    this.logEvent(`🔀 Gates set to random positions.`);
+                    this.logEvent(`🎲 ${this.players[this.firstPlayerIdx].name} was randomly chosen to go first!`);
+                    this.announceFirstPlayer();
                 }
             }
 
+            announceFirstPlayer() {
+                const overlay = document.getElementById('firstPlayerOverlay');
+                const nameEl = document.getElementById('firstPlayerName');
+                const labelEl = document.getElementById('firstPlayerLabel');
+                const chosen = this.players[this.firstPlayerIdx];
+
+                this.inputLocked = true;
+                labelEl.innerText = "🎲 Choosing first player…";
+                labelEl.className = "text-xs uppercase tracking-widest text-amber-400 font-bold";
+                nameEl.className = "font-outfit text-3xl sm:text-4xl font-black text-white mt-2";
+                overlay.classList.remove('hidden');
+                this.updateUI();
+
+                // Quick "shuffle" through the names, then land on the chosen player
+                let i = 0;
+                const spin = setInterval(() => {
+                    nameEl.innerText = this.players[i % this.numPlayers].name;
+                    i++;
+                }, 90);
+                this.announceTimers.push(spin);
+
+                const reveal = setTimeout(() => {
+                    clearInterval(spin);
+                    nameEl.innerText = chosen.name;
+                    nameEl.className = "font-outfit text-3xl sm:text-4xl font-black text-sky-300 mt-2";
+                    labelEl.innerText = "🎲 Goes first!";
+                    labelEl.className = "text-xs uppercase tracking-widest text-emerald-400 font-bold";
+                }, 1300);
+                this.announceTimers.push(reveal);
+
+                const done = setTimeout(() => {
+                    overlay.classList.add('hidden');
+                    this.inputLocked = false;
+                    this.updateUI();
+                }, 2600);
+                this.announceTimers.push(done);
+            }
+
             dropMarble(col) {
-                if (this.isSimulating || this.isCollectingTray) return;
+                if (this.inputLocked || this.isSimulating || this.isCollectingTray) return;
 
                 const player = this.players[this.activePlayerIdx];
                 if (player.marbles <= 0) return;
+                if (!player.isSolo && this.dropsThisTurn >= MAX_DROPS_PER_TURN) return;
 
                 player.marbles--;
+                this.dropsThisTurn++;
                 this.isSimulating = true;
 
                 audio.playDrop();
@@ -729,6 +818,22 @@
                 });
             }
 
+            advanceTurn() {
+                this.dropsThisTurn = 0;
+                this.activePlayerIdx = (this.activePlayerIdx + 1) % this.numPlayers;
+                this.logEvent(`➡️ ${this.players[this.activePlayerIdx].name}'s turn.`);
+            }
+
+            endTurn() {
+                const player = this.players[this.activePlayerIdx];
+                if (!player || player.isSolo) return;
+                if (this.inputLocked || this.isSimulating || this.isCollectingTray) return;
+                if (this.dropsThisTurn < 1) return; // must drop at least one marble
+                this.logEvent(`✋ ${player.name} ended their turn after ${this.dropsThisTurn} drop(s).`);
+                this.advanceTurn();
+                this.updateUI();
+            }
+
             finishTurn(collectedCount) {
                 const activePlayer = this.players[this.activePlayerIdx];
 
@@ -746,19 +851,21 @@
                     }
                 } else {
                     if (collectedCount > 0) {
-                        this.logEvent(`📥 ${activePlayer.name} picked up ${collectedCount} marble(s). Hand count: ${activePlayer.marbles}`);
-                    } else {
-                        this.logEvent(`✅ ${activePlayer.name} had a safe turn! 0 marbles collected.`);
-                    }
-
-                    if (activePlayer.marbles <= 0) {
+                        // A marble fell all the way through: take everything from the tray, turn ends
+                        this.logEvent(`📥 ${activePlayer.name} had to take ${collectedCount} marble(s) from the tray. Hand count: ${activePlayer.marbles}. Turn over!`);
+                        this.advanceTurn();
+                    } else if (activePlayer.marbles <= 0) {
+                        this.logEvent(`✅ ${activePlayer.name} placed their last marble!`);
                         audio.playVictory();
                         showWinModal(activePlayer, "Successfully emptied their hand of all marbles!");
+                        this.updateUI();
                         return;
+                    } else if (this.dropsThisTurn >= MAX_DROPS_PER_TURN) {
+                        this.logEvent(`✅ Safe drop! ${activePlayer.name} used all ${MAX_DROPS_PER_TURN} drops. (${activePlayer.marbles} in hand)`);
+                        this.advanceTurn();
+                    } else {
+                        this.logEvent(`✅ Safe drop! ${activePlayer.name} has dropped ${this.dropsThisTurn}/${MAX_DROPS_PER_TURN}. Drop again or end turn. (${activePlayer.marbles} in hand)`);
                     }
-
-                    // Advance turn
-                    this.activePlayerIdx = (this.activePlayerIdx + 1) % this.numPlayers;
                 }
 
                 this.updateUI();
@@ -962,7 +1069,10 @@
                         const trapped = this.marbles.filter(m => m.state === 'TRAPPED').length;
                         document.getElementById('turnBannerText').innerText = text || `${activeP.name} — ${trapped}/24 Marbles Placed on Board`;
                     } else {
-                        document.getElementById('turnBannerText').innerText = text || `${activeP.name}'s Turn — Select Column 1..10`;
+                        const dropInfo = this.dropsThisTurn === 0
+                            ? `Drop at least 1 (up to ${MAX_DROPS_PER_TURN})`
+                            : `${this.dropsThisTurn}/${MAX_DROPS_PER_TURN} dropped — drop again or end turn`;
+                        document.getElementById('turnBannerText').innerText = text || `${activeP.name}'s Turn — ${dropInfo}`;
                     }
                     document.getElementById('turnIndicatorDot').className = `w-3 h-3 rounded-full bg-sky-400 animate-ping`;
                 }
@@ -989,7 +1099,10 @@
                         <div id="playerCard_${p.id}" class="glass-panel p-3 rounded-2xl border ${isActive ? 'player-card-active' : 'border-slate-800 opacity-65'} transition">
                             <div class="flex items-center justify-between">
                                 <span class="text-xs font-extrabold text-slate-100">${p.name}</span>
-                                ${isActive ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-400/30">Active</span>' : ''}
+                                <span class="flex items-center gap-1">
+                                    ${idx === this.firstPlayerIdx ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-400/30" title="Randomly chosen to go first">🎲 First</span>' : ''}
+                                    ${isActive ? '<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-400 border border-sky-400/30">Active</span>' : ''}
+                                </span>
                             </div>
                             <div class="flex items-baseline gap-2 mt-1">
                                 <span class="text-2xl font-black font-outfit text-white">${p.marbles}</span>
@@ -1008,13 +1121,19 @@
                 for (let c = 0; c < NUM_PATHS; c++) {
                     const btn = document.createElement('button');
                     btn.className = `drop-btn py-2 bg-slate-900/90 hover:bg-sky-500/20 text-slate-200 border border-slate-700 rounded-xl font-bold text-xs flex flex-col items-center justify-center shadow-md`;
-                    btn.disabled = this.isSimulating || this.isCollectingTray;
+                    btn.disabled = this.inputLocked || this.isSimulating || this.isCollectingTray;
                     btn.innerHTML = `<span>Col ${c + 1}</span><span class="text-[10px] text-sky-400">↓</span>`;
                     btn.onclick = () => this.dropMarble(c);
                     btn.onmouseenter = () => this.hoveredCol = c;
                     btn.onmouseleave = () => this.hoveredCol = -1;
                     dropContainer.appendChild(btn);
                 }
+
+                const endBtn = document.getElementById('btnEndTurn');
+                const activeP = this.players[this.activePlayerIdx];
+                endBtn.classList.toggle('hidden', !activeP || activeP.isSolo);
+                endBtn.disabled = this.inputLocked || this.isSimulating || this.isCollectingTray || this.dropsThisTurn < 1;
+                endBtn.innerText = this.dropsThisTurn < 1 ? '✋ End Turn (drop at least 1 marble first)' : `✋ End Turn (${this.dropsThisTurn}/${MAX_DROPS_PER_TURN} dropped)`;
 
                 document.getElementById('simStateBadge').innerText = (this.isSimulating || this.isCollectingTray) ? "Simulating..." : "Ready";
                 document.getElementById('simStateBadge').className = (this.isSimulating || this.isCollectingTray) 
@@ -1027,7 +1146,7 @@
 
         window.addEventListener('load', () => {
             game = new CascadeGame();
-            game.startMatch(2, ["Player 1", "Player 2"]);
+            game.startMatch(2, ["Player 1", "Player 2"], 12);
 
             const canvas = document.getElementById('gameCanvas');
             canvas.addEventListener('mousemove', (e) => {
@@ -1069,6 +1188,8 @@
                 game.logEvent("🔀 All gates randomized!");
             };
 
+            document.getElementById('btnEndTurn').onclick = () => game.endTurn();
+
             document.getElementById('btnHowToPlay').onclick = () => showModal('modalRules');
             document.getElementById('btnCloseRules').onclick = () => hideModal('modalRules');
             document.getElementById('btnGotIt').onclick = () => hideModal('modalRules');
@@ -1082,6 +1203,7 @@
             let selectedPlayersCount = 2;
 
             function renderPlayerNameInputs(count) {
+                document.getElementById('startMarblesWrap').classList.toggle('hidden', count === 1);
                 const container = document.getElementById('playerNamesContainer');
                 container.innerHTML = '<label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1">Player Names</label>';
                 for (let i = 0; i < count; i++) {
@@ -1112,14 +1234,17 @@
                     const val = document.getElementById(`inputPlayerName_${i}`)?.value.trim();
                     names.push(val || (selectedPlayersCount === 1 ? "Solo Player" : `Player ${i + 1}`));
                 }
+                let startMarbles = parseInt(document.getElementById('inputStartMarbles').value, 10);
+                if (isNaN(startMarbles)) startMarbles = 12;
+                startMarbles = Math.max(1, Math.min(24, startMarbles));
                 hideModal('modalNewGame');
-                game.startMatch(selectedPlayersCount, names);
+                game.startMatch(selectedPlayersCount, names, startMarbles);
             };
 
             document.getElementById('btnPlayAgain').onclick = () => {
                 hideModal('modalWin');
                 const names = game.players.map(p => p.name);
-                game.startMatch(game.numPlayers, names);
+                game.startMatch(game.numPlayers, names, game.startMarbles);
             };
 
             function loop() {
